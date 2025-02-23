@@ -42,7 +42,6 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: (response) => {
-        console.log('token:', response.token);
         this.authService.storeToken(response.token);
         this.router.navigate(['/home']); // Redirect to home page after login
       },
