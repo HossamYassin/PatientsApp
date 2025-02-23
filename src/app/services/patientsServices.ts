@@ -1,6 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable, retry, throwError } from 'rxjs';
+import {
+  catchError,
+  delay,
+  Observable,
+  retry,
+  retryWhen,
+  scan,
+  throwError,
+} from 'rxjs';
 import { environment } from '../environments/environment';
 
 export interface Patient {
@@ -24,28 +32,72 @@ export class PatientService {
 
   getPatients(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl).pipe(
-      retry(3), // Retry 3 times before failing
+      retryWhen((errors) =>
+        errors.pipe(
+          scan((retryCount, error) => {
+            if (retryCount >= 3) {
+              throw error; // Stop retrying after 3 attempts
+            }
+            console.warn(`Retrying... Attempt ${retryCount + 1}`);
+            return retryCount + 1;
+          }, 0),
+          delay(2000) // Wait 2 seconds before retrying
+        )
+      ),
       catchError(this.handleError)
     );
   }
 
   addPatient(patient: Patient): Observable<Patient> {
     return this.http.post<Patient>(this.apiUrl, patient).pipe(
-      retry(3), // Retry 3 times before failing
+      retryWhen((errors) =>
+        errors.pipe(
+          scan((retryCount, error) => {
+            if (retryCount >= 3) {
+              throw error; // Stop retrying after 3 attempts
+            }
+            console.warn(`Retrying... Attempt ${retryCount + 1}`);
+            return retryCount + 1;
+          }, 0),
+          delay(2000) // Wait 2 seconds before retrying
+        )
+      ),
       catchError(this.handleError)
     );
   }
 
   updatePatient(patient: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/${patient.id}`, patient).pipe(
-      retry(3), // Retry 3 times before failing
+      retryWhen((errors) =>
+        errors.pipe(
+          scan((retryCount, error) => {
+            if (retryCount >= 3) {
+              throw error; // Stop retrying after 3 attempts
+            }
+            console.warn(`Retrying... Attempt ${retryCount + 1}`);
+            return retryCount + 1;
+          }, 0),
+          delay(2000) // Wait 2 seconds before retrying
+        )
+      ),
       catchError(this.handleError)
     );
   }
 
   deletePatient(patientId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${patientId}`).pipe(
-      retry(3), // Retry 3 times before failing
+      retryWhen((errors) =>
+        errors.pipe(
+          scan((retryCount, error) => {
+            if (retryCount >= 3) {
+              throw error; // Stop retrying after 3 attempts
+            }
+            console.warn(`Retrying... Attempt ${retryCount + 1}`);
+            return retryCount + 1;
+          }, 0),
+          delay(2000) // Wait 2 seconds before retrying
+        )
+      ),
       catchError(this.handleError)
     );
   }
@@ -54,7 +106,18 @@ export class PatientService {
     return this.http
       .get<any[]>(`${this.apiAppointemntsUrl}/patient/${patientId}`)
       .pipe(
-        retry(3), // Retry 3 times before failing
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((retryCount, error) => {
+              if (retryCount >= 3) {
+                throw error; // Stop retrying after 3 attempts
+              }
+              console.warn(`Retrying... Attempt ${retryCount + 1}`);
+              return retryCount + 1;
+            }, 0),
+            delay(2000) // Wait 2 seconds before retrying
+          )
+        ),
         catchError(this.handleError)
       );
   }

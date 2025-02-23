@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {
+  catchError,
+  delay,
+  Observable,
+  retryWhen,
+  scan,
+  throwError,
+} from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -12,7 +19,23 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email, password });
+    return this.http
+      .post(`${this.apiUrl}/auth/login`, { email, password })
+      .pipe(
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((retryCount, error) => {
+              if (retryCount >= 3) {
+                throw error; // Stop retrying after 3 attempts
+              }
+              console.warn(`Retrying... Attempt ${retryCount + 1}`);
+              return retryCount + 1;
+            }, 0),
+            delay(2000) // Wait 2 seconds before retrying
+          )
+        ),
+        catchError(this.handleError)
+      );
   }
 
   storeToken(token: string) {
@@ -29,5 +52,12 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('token');
+  }
+
+  private handleError(error: any) {
+    console.error('Error occurred:', error);
+    return throwError(
+      () => new Error('Something went wrong, please try again later.')
+    );
   }
 }
