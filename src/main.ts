@@ -7,6 +7,9 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AppComponent } from './app/app.component';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { authInterceptor } from './app/auth.interceptor';
+import { ErrorInterceptor } from './app/errors.interceptor';
+import { provideToastr } from 'ngx-toastr';
+import { importProvidersFrom } from '@angular/core';
 
 export const routes: Routes = [
   { path: '', component: LoginComponent },
@@ -17,7 +20,12 @@ export const routes: Routes = [
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, ErrorInterceptor])),
     provideAnimations(),
+    provideToastr({
+      positionClass: 'toast-top-right',
+      timeOut: 3000,
+      progressBar: true,
+    }),
   ],
 }).catch((err) => console.error(err));

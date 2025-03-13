@@ -10,17 +10,9 @@ import {
   throwError,
 } from 'rxjs';
 import { environment } from '../environments/environment';
-
-export interface Patient {
-  id: number;
-  email: string;
-  fullName: string;
-  dateOfBirth: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
+import { ApiResponse } from '../models/ApiResponse';
+import { Appointment } from '../models/Appointment';
+import { Patient } from '../models/Patient';
 
 @Injectable({
   providedIn: 'root',
@@ -30,8 +22,8 @@ export class PatientService {
   private apiAppointemntsUrl = `${environment.apiUrl}/appointments`;
   private http = inject(HttpClient);
 
-  getPatients(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl).pipe(
+  getPatients(): Observable<ApiResponse<Patient[]>> {
+    return this.http.get<ApiResponse<Patient[]>>(this.apiUrl).pipe(
       retryWhen((errors) =>
         errors.pipe(
           scan((retryCount, error) => {
@@ -48,8 +40,8 @@ export class PatientService {
     );
   }
 
-  addPatient(patient: Patient): Observable<Patient> {
-    return this.http.post<Patient>(this.apiUrl, patient).pipe(
+  addPatient(patient: Patient): Observable<ApiResponse<Patient>> {
+    return this.http.post<ApiResponse<Patient>>(this.apiUrl, patient).pipe(
       retryWhen((errors) =>
         errors.pipe(
           scan((retryCount, error) => {
@@ -66,45 +58,51 @@ export class PatientService {
     );
   }
 
-  updatePatient(patient: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${patient.id}`, patient).pipe(
-      retryWhen((errors) =>
-        errors.pipe(
-          scan((retryCount, error) => {
-            if (retryCount >= 3) {
-              throw error; // Stop retrying after 3 attempts
-            }
-            console.warn(`Retrying... Attempt ${retryCount + 1}`);
-            return retryCount + 1;
-          }, 0),
-          delay(2000) // Wait 2 seconds before retrying
-        )
-      ),
-      catchError(this.handleError)
-    );
-  }
-
-  deletePatient(patientId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${patientId}`).pipe(
-      retryWhen((errors) =>
-        errors.pipe(
-          scan((retryCount, error) => {
-            if (retryCount >= 3) {
-              throw error; // Stop retrying after 3 attempts
-            }
-            console.warn(`Retrying... Attempt ${retryCount + 1}`);
-            return retryCount + 1;
-          }, 0),
-          delay(2000) // Wait 2 seconds before retrying
-        )
-      ),
-      catchError(this.handleError)
-    );
-  }
-
-  getAppointments(patientId: number): Observable<any[]> {
+  updatePatient(patient: Patient): Observable<ApiResponse<Patient>> {
     return this.http
-      .get<any[]>(`${this.apiAppointemntsUrl}/patient/${patientId}`)
+      .put<ApiResponse<Patient>>(`${this.apiUrl}/${patient.id}`, patient)
+      .pipe(
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((retryCount, error) => {
+              if (retryCount >= 3) {
+                throw error; // Stop retrying after 3 attempts
+              }
+              console.warn(`Retrying... Attempt ${retryCount + 1}`);
+              return retryCount + 1;
+            }, 0),
+            delay(2000) // Wait 2 seconds before retrying
+          )
+        ),
+        catchError(this.handleError)
+      );
+  }
+
+  deletePatient(patientId: number): Observable<ApiResponse<any>> {
+    return this.http
+      .delete<ApiResponse<any>>(`${this.apiUrl}/${patientId}`)
+      .pipe(
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((retryCount, error) => {
+              if (retryCount >= 3) {
+                throw error; // Stop retrying after 3 attempts
+              }
+              console.warn(`Retrying... Attempt ${retryCount + 1}`);
+              return retryCount + 1;
+            }, 0),
+            delay(2000) // Wait 2 seconds before retrying
+          )
+        ),
+        catchError(this.handleError)
+      );
+  }
+
+  getAppointments(patientId: number): Observable<ApiResponse<Appointment[]>> {
+    return this.http
+      .get<ApiResponse<Appointment[]>>(
+        `${this.apiAppointemntsUrl}/patient/${patientId}`
+      )
       .pipe(
         retryWhen((errors) =>
           errors.pipe(

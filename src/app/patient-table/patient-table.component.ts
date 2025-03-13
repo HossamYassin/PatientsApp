@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Patient, PatientService } from '../services/patientsServices';
+import { PatientService } from '../services/patientsServices';
 import { NgbDatepickerModule, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 
 import {
@@ -11,6 +11,7 @@ import {
   Validators,
 } from '@angular/forms';
 import Swal from 'sweetalert2';
+import { Patient } from '../models/Patient';
 
 @Component({
   selector: 'app-patient-table',
@@ -20,7 +21,7 @@ import Swal from 'sweetalert2';
   imports: [CommonModule, ReactiveFormsModule, NgbDatepickerModule],
 })
 export class PatientTableComponent {
-  patients: any[] = [];
+  patients: Patient[] = [];
   appointments: any[] = [];
   selectedPatient: any = null;
   patientForm: FormGroup;
@@ -49,21 +50,54 @@ export class PatientTableComponent {
   }
 
   loadPatients() {
-    this.patientService.getPatients().subscribe((data) => {
-      this.patients = data;
+    this.patientService.getPatients().subscribe({
+      next: (response) => {
+        console.log('API Response:', response);
+        if (
+          response &&
+          response.status === 'success' &&
+          Array.isArray(response.data)
+        ) {
+          this.patients = response.data;
+        } else {
+          console.error('Unexpected API response structure', response);
+          this.patients = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching patients:', error);
+        this.patients = [];
+      },
     });
   }
 
   openAppointmentsModal(content: any, patient: any) {
     this.selectedPatient = patient;
-    this.patientService.getAppointments(patient.id).subscribe((data) => {
-      this.appointments = data;
-      this.modalService.open(content, {
-        backdrop: 'static',
-        keyboard: false,
-      });
+    this.patientService.getAppointments(patient.id).subscribe({
+      next: (response) => {
+        console.log('Appointments API Response:', response); // Debugging
+        if (
+          response &&
+          response.status === 'success' &&
+          Array.isArray(response.data)
+        ) {
+          this.appointments = response.data;
+        } else {
+          console.error('Unexpected API response structure', response);
+          this.appointments = [];
+        }
+        this.modalService.open(content, {
+          backdrop: 'static',
+          keyboard: false,
+        });
+      },
+      error: (error) => {
+        console.error('Error fetching appointments:', error);
+        this.appointments = [];
+      },
     });
   }
+
   openAddPatientModal(content: any): void {
     this.modalService.open(content, { centered: true });
   }
@@ -75,6 +109,7 @@ export class PatientTableComponent {
     newPatient.id = 0;
 
     const rawDate: NgbDateStruct = this.patientForm.value.dateOfBirth;
+    console.log('date :', rawDate);
     const formattedDate = this.convertDateToISO(rawDate);
     newPatient.dateOfBirth = formattedDate;
 
