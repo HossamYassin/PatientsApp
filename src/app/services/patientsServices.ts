@@ -19,6 +19,8 @@ import { Patient } from '../models/Patient';
 })
 export class PatientService {
   private apiUrl = `${environment.apiUrl}/patients`;
+  private retryCount = environment.retryCount;
+  private retryDelay = environment.retryDelay;
   private apiAppointemntsUrl = `${environment.apiUrl}/appointments`;
   private http = inject(HttpClient);
 
@@ -27,13 +29,13 @@ export class PatientService {
       retryWhen((errors) =>
         errors.pipe(
           scan((retryCount, error) => {
-            if (retryCount >= 3) {
+            if (retryCount > this.retryCount) {
               throw error; // Stop retrying after 3 attempts
             }
             console.warn(`Retrying... Attempt ${retryCount + 1}`);
             return retryCount + 1;
           }, 0),
-          delay(2000) // Wait 2 seconds before retrying
+          delay(this.retryDelay)
         )
       ),
       catchError(this.handleError)
@@ -45,13 +47,13 @@ export class PatientService {
       retryWhen((errors) =>
         errors.pipe(
           scan((retryCount, error) => {
-            if (retryCount >= 3) {
+            if (retryCount > this.retryCount) {
               throw error; // Stop retrying after 3 attempts
             }
             console.warn(`Retrying... Attempt ${retryCount + 1}`);
             return retryCount + 1;
           }, 0),
-          delay(2000) // Wait 2 seconds before retrying
+          delay(this.retryDelay)
         )
       ),
       catchError(this.handleError)
@@ -65,13 +67,13 @@ export class PatientService {
         retryWhen((errors) =>
           errors.pipe(
             scan((retryCount, error) => {
-              if (retryCount >= 3) {
+              if (retryCount > this.retryCount) {
                 throw error; // Stop retrying after 3 attempts
               }
               console.warn(`Retrying... Attempt ${retryCount + 1}`);
               return retryCount + 1;
             }, 0),
-            delay(2000) // Wait 2 seconds before retrying
+            delay(this.retryDelay)
           )
         ),
         catchError(this.handleError)
@@ -85,13 +87,13 @@ export class PatientService {
         retryWhen((errors) =>
           errors.pipe(
             scan((retryCount, error) => {
-              if (retryCount >= 3) {
+              if (retryCount > this.retryCount) {
                 throw error; // Stop retrying after 3 attempts
               }
               console.warn(`Retrying... Attempt ${retryCount + 1}`);
               return retryCount + 1;
             }, 0),
-            delay(2000) // Wait 2 seconds before retrying
+            delay(this.retryDelay)
           )
         ),
         catchError(this.handleError)
@@ -107,13 +109,13 @@ export class PatientService {
         retryWhen((errors) =>
           errors.pipe(
             scan((retryCount, error) => {
-              if (retryCount >= 3) {
+              if (retryCount > this.retryCount) {
                 throw error; // Stop retrying after 3 attempts
               }
               console.warn(`Retrying... Attempt ${retryCount + 1}`);
               return retryCount + 1;
             }, 0),
-            delay(2000) // Wait 2 seconds before retrying
+            delay(this.retryDelay)
           )
         ),
         catchError(this.handleError)
